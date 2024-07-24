@@ -2,11 +2,12 @@ package db
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	// "go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"google.golang.org/api/drive/v3"
+	"log"
 )
 
 type Car struct {
@@ -25,36 +26,41 @@ func PicDB() (*mongo.Client, *mongo.Collection, error) {
 		return nil, nil, err
 	}
 
-	picCollection := client.Database("photos").Collection("images")
+	picCollection := client.Database("carmash").Collection("images")
 
 	return client, picCollection, nil
 
 }
 
-// function to insert the image links to the database
 func InsertImagesLinks(file *drive.File) error {
-
-	// create database connection
 	client, picCollection, err := PicDB()
 	if err != nil {
 		return err
 	}
 	defer client.Disconnect(context.Background())
 
-	filemetadata := Car{
-		ID:        primitive.NewObjectID(),
-		Name:      file.Name,
-		FileID:    file.Id,
-		MimeType:  file.MimeType,
-		Elorating: 400.0,
-	}
+	// check if the image already exists in the db
+	existingFile := Car{}
+	filter := bson.M{"file_id": file.Id}
+	err = picCollection.FindOne(context.Background(), filter).Decode(&existingFile)
+	if err == mongo.ErrNoDocuments {
+		filemetadata := Car{
+			ID:        primitive.NewObjectID(),
+			Name:      file.Name,
+			FileID:    file.Id,
+			MimeType:  file.MimeType,
+			Elorating: 400.0,
+		}
 
-	// insert the links to the database
-	_, err = picCollection.InsertOne(context.Background(), filemetadata)
-	if err != nil {
+		_, err = picCollection.InsertOne(context.Background(), filemetadata)
+		if err != nil {
+			return err
+		}
+
+		log.Println("Inserted file:", filemetadata)
+	} else if err != nil {
 		return err
 	}
 
 	return nil
-
 }
