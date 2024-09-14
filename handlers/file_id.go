@@ -11,7 +11,7 @@ func ListFilesInFolder(folderID string) ([]*drive.File, error) {
 
 	ctx := context.Background()
 
-	srv, err := drive.NewService(ctx, option.WithCredentialsFile("C:/Users/Ahmed/programming/carmash/handlers/service.json"))
+	srv, err := drive.NewService(ctx, option.WithCredentialsFile("service.json"))
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve Drive client: %v", err)
 	}
@@ -33,8 +33,7 @@ func ListFilesInFolder(folderID string) ([]*drive.File, error) {
 
 func GetFileMetadata(fileID string) (*drive.File, error) {
 	ctx := context.Background()
-
-	srv, err := drive.NewService(ctx, option.WithCredentialsFile("C:/Users/Ahmed/programming/carmash/handlers/service.json"))
+	srv, err := drive.NewService(ctx, option.WithCredentialsFile("service.json"))
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve Drive client: %v", err)
 	}

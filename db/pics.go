@@ -18,7 +18,6 @@ type Car struct {
 	Elorating float64            `bson:"rating"`
 }
 
-// db connection function
 func PicDB() (*mongo.Client, *mongo.Collection, error) {
 
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
@@ -39,7 +38,6 @@ func InsertImagesLinks(file *drive.File) error {
 	}
 	defer client.Disconnect(context.Background())
 
-	// check if the image already exists in the db
 	existingFile := Car{}
 	filter := bson.M{"file_id": file.Id}
 	err = picCollection.FindOne(context.Background(), filter).Decode(&existingFile)
@@ -63,4 +61,98 @@ func InsertImagesLinks(file *drive.File) error {
 	}
 
 	return nil
+}
+
+func GetPair() ([]Car, error) {
+
+	client, picCollection, err := PicDB()
+	if err != nil {
+		return nil, err
+	}
+	defer client.Disconnect(context.Background())
+
+	var car []Car
+	cur, err := picCollection.Aggregate(context.Background(), bson.A{bson.M{"$sample": bson.M{"size": 2}}})
+	if err != nil {
+		return nil, err
+	}
+
+	if err = cur.All(context.Background(), &car); err != nil {
+		return nil, err
+	}
+
+	return car, nil
+}
+
+func GetCarID(carID string) (*Car, error) {
+	client, picCollection, err := PicDB()
+	if err != nil {
+		return nil, err
+	}
+	defer client.Disconnect(context.Background())
+
+	oid, err := primitive.ObjectIDFromHex(carID)
+	if err != nil {
+		return nil, err
+	}
+
+	var car Car
+	err = picCollection.FindOne(context.Background(), bson.M{"_id": oid}).Decode(&car)
+	if err != nil {
+		return nil, err
+	}
+
+	return &car, nil
+}
+
+func UpdateEloRating(winnerCarID, loserCarID string, newWinnerR, newLoserR float64) error {
+	client, picCollection, err := PicDB()
+	if err != nil {
+		return err
+	}
+	defer client.Disconnect(context.Background())
+
+	winnerOID, err := primitive.ObjectIDFromHex(winnerCarID)
+	if err != nil {
+		return err
+	}
+
+	loserOID, err := primitive.ObjectIDFromHex(loserCarID)
+	if err != nil {
+		return err
+	}
+
+	_, err = picCollection.UpdateOne(context.Background(), bson.M{"_id": winnerOID}, bson.M{"$set": bson.M{"rating": newWinnerR}})
+	if err != nil {
+		return err
+	}
+
+	_, err = picCollection.UpdateOne(context.Background(), bson.M{"_id": loserOID}, bson.M{"$set": bson.M{"rating": newLoserR}})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetAllPics() ([]Car, error) {
+
+	client, picCollection, err := PicDB()
+	if err != nil {
+		return nil, err
+	}
+	defer client.Disconnect(context.Background())
+
+	var cars []Car
+	cur, err := picCollection.Find(context.Background(), bson.M{})
+	if err != nil {
+		return nil, err
+	}
+
+	if err = cur.All(context.Background(), &cars); err != nil {
+		return nil, err
+	}
+
+	return cars, nil
+
 }

@@ -15,13 +15,17 @@
         <form action="/choose" method="post" class="image-one">
             <input type="hidden" name="winnerCarID" value="{{.Car1ID}}">
             <input type="hidden" name="loserCarID" value="{{.Car2ID}}">
-            <button type="submit"><img src="data:image/png;base64,{{.Car1Image}}" alt="Car 1"></button>
+            <button type="submit">
+                <img src="/proxy?url=https://drive.google.com/uc?id={{.CarLink1}}" alt="Car 1">
+            </button>
         </form>
         <div class="or">OR</div>
         <form action="/choose" method="post" class="image-two">
             <input type="hidden" name="winnerCarID" value="{{.Car2ID}}">
             <input type="hidden" name="loserCarID" value="{{.Car1ID}}">
-            <button type="submit"><img src="data:image/png;base64,{{.Car2Image}}" alt="Car 2"></button>
+            <button type="submit">
+                <img src="/proxy?url=https://drive.google.com/uc?id={{.CarLink2}}" alt="Car 2">
+            </button>
         </form>
     </div>
 
@@ -37,8 +41,8 @@
                 <tbody>
                     {{range .cars}}
                     <tr>
-                        <th>{{.CarID}}</th>
-                        <th>{{.EloRating}}</th>
+                        <th>{{.Name}}</th>
+                        <th>{{.Elorating}}</th>
                     </tr> 
                     {{end}}
                 </tbody>
